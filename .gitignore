@@ -1,3 +1,6 @@
+# Anything in config dir
+**/config
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
