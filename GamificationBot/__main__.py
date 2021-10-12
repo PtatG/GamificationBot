@@ -91,7 +91,7 @@ async def push_event(event, gh, db, *args, **kwargs):
 # end of push_event
 
 @router.register("issues", action = "closed")
-async def issue_closed_event(event, gh, *args, **kwargs):
+async def issue_closed_event(event, gh, db, *args, **kwargs):
     # data collection of issues payload
     repoOwner = event.data["repository"]["owner"]["login"]
     repoFullName = event.data["repository"]["full_name"]
