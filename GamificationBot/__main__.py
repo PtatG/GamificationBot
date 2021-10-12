@@ -3,6 +3,7 @@ from aiohttp import web
 from gidgethub import routing, sansio
 from gidgethub import aiohttp as gh_aiohttp
 from pymongo import MongoClient
+from datetime import datetime
 
 router = routing.Router()
 routes = web.RouteTableDef()
@@ -13,16 +14,20 @@ def calcLevel(exp):
         result = 0
     result = int(math.floor(1 + math.sqrt(result)))
     return result
+# end of calcLevel
 
 @router.register("push")
 async def push_event(event, gh, db, *args, **kwargs):
     # data collection of push payload
+    repoOwner = event.data["repository"]["owner"]["login"]
     repoFullName = event.data["repository"]["full_name"]
+    repoName = event.data["repository"]["name"]
     repoID = event.data["repository"]["id"]
-    owner = event.data["repository"]["owner"]["login"]
-    pusher = event.data["pusher"]["name"]
-    sender = event.data["sender"]["login"]
-    senderID = event.data["sender"]["id"]
+    repoURL = event.data["repository"]["html_url"]
+    username = event.data["sender"]["login"]
+    userID = event.data["sender"]["id"]
+    eventType = "push"
+    pushTime = datetime.now().isoformat()
     numCommits = len(event.data["commits"])
     # store the commit data into lists
     commitID = []
@@ -36,12 +41,15 @@ async def push_event(event, gh, db, *args, **kwargs):
 
     # create the data collection payload
     payload = {
+        "repoOwner": repoOwner,
         "repoFullName": repoFullName,
+        "repoName": repoName,
         "repoID": repoID,
-        "owner": owner,
-        "pusher": pusher,
-        "sender": sender,
-        "senderID": senderID,
+        "repoURL": repoURL,
+        "username": username,
+        "userID": userID,
+        "eventType": eventType,
+        "pushTime": pushTime,
         "numCommits": numCommits,
         "commitID": commitID,
         "commitTime": commitTime,
@@ -53,7 +61,7 @@ async def push_event(event, gh, db, *args, **kwargs):
     # find user in userLevels collection
     user = db.userLevels.find_one({
         "repoFullName": repoFullName,
-        "sender": sender
+        "username": username
     })
 
     # insert or update user data
@@ -61,22 +69,91 @@ async def push_event(event, gh, db, *args, **kwargs):
         userLevel = calcLevel(expEarned)
         userPayload = {
             "repoFullName": repoFullName,
-            "sender": sender,
+            "username": username,
+            "numCommits": numCommits,
+            "issuesClosed": 0,
             "userLevel": userLevel,
             "expEarned": expEarned
         }
         db.userLevels.insert_one(userPayload)
     else:
+        numCommits += user["numCommits"]
         expEarned += user["expEarned"]
         userLevel = calcLevel(expEarned)
         db.userLevels.update_one({
             "repoFullName": repoFullName,
-            "sender": sender
+            "username": username
         }, {"$set": {
+                "numCommits": numCommits,
                 "userLevel": userLevel,
                 "expEarned": expEarned
         }})
+# end of push_event
 
+@router.register("issues", action = "closed")
+async def issue_closed_event(event, gh, *args, **kwargs):
+    # data collection of issues payload
+    repoOwner = event.data["repository"]["owner"]["login"]
+    repoFullName = event.data["repository"]["full_name"]
+    repoName = event.data["repository"]["name"]
+    repoID = event.data["repository"]["id"]
+    repoURL = event.data["repository"]["html_url"]
+    username = event.data["sender"]["login"]
+    userID = event.data["sender"]["id"]
+    eventType = "issue closed"
+    issueID = event.data["issue"]["id"]
+    issueURL = event.data["issue"]["html_url"]
+    issueCreatedAt = event.data["issue"]["created_at"]
+    issueClosedAt = event.data["issue"]["closed_at"]
+    expEarned = 40
+
+    payload = {
+        "repoOwner": repoOwner,
+        "repoFullName": repoFullName,
+        "repoName": repoName,
+        "repoID": repoID,
+        "repoURL": repoURL,
+        "username": username,
+        "userID": userID,
+        "eventType": eventType,
+        "issueID": issueID,
+        "issueURL": issueURL,
+        "issueCreatedAt": issueCreatedAt,
+        "issueClosedAt": issueClosedAt,
+        "expEarned": expEarned
+    }
+    # insert payload into issuesClosed collection
+    db.issuesClosed.insert_one(payload)
+
+    user = db.userLevels.find_one({
+        "repoFullName": repoFullName,
+        "username": username
+    })
+
+    if user == None:
+        userLevel = calcLevel(expEarned)
+        userPayload = {
+            "repoFullName": repoFullName,
+            "username": username,
+            "numCommits": 0,
+            "issuesClosed": 1,
+            "userLevel": userLevel,
+            "expEarned": expEarned
+        }
+        db.userLevels.insert_one(userPayload)
+    else:
+        issuesClosed = user["issuesClosed"] + 1
+        expEarned += user["expEarned"]
+        userLevel = calcLevel(expEarned)
+        db.userLevels.update_one({
+            "repoFullName": repoFullName,
+            "username": username
+        }, {"$set": {
+                "issuesClosed": issuesClosed,
+                "userLevel": userLevel,
+                "expEarned": expEarned
+        }})
+# end if issue_closed_event
 
 @routes.post("/")
 async def main(request):
