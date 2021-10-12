@@ -30,11 +30,10 @@ async def push_event(event, gh, db, *args, **kwargs):
     pushTime = datetime.now().isoformat()
     numCommits = len(event.data["commits"])
     # store the commit data into lists
-    commitID = []
-    commitTime = []
-    for commit in event.data["commits"]:
-        commitID.append(commit["id"])
-        commitTime.append(commit["timestamp"])
+    commits = []
+    for comm in event.data["commits"]:
+        commits.append({"commitID": comm["id"]})
+        commits.append({"commitTime": comm["timestamp"]})
 
     # calculate experience earned
     expEarned = 10 + (numCommits * 4)
