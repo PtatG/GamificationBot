@@ -32,8 +32,10 @@ async def push_event(event, gh, db, *args, **kwargs):
     # store the commit data into lists
     commits = []
     for comm in event.data["commits"]:
-        commits.append({"commitID": comm["id"]})
-        commits.append({"commitTime": comm["timestamp"]})
+        commits.append({
+            "commitID": comm["id"],
+            "commitTime": comm["timestamp"]
+        })
 
     # calculate experience earned
     expEarned = 10 + (numCommits * 4)
@@ -50,8 +52,7 @@ async def push_event(event, gh, db, *args, **kwargs):
         "eventType": eventType,
         "pushTime": pushTime,
         "numCommits": numCommits,
-        "commitID": commitID,
-        "commitTime": commitTime,
+        "commits": commits,
         "expEarned": expEarned
     }
     # insert payload into push collection
