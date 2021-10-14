@@ -72,12 +72,14 @@ async def push_event(event, gh, db, *args, **kwargs):
             "username": username,
             "numCommits": numCommits,
             "issuesClosed": 0,
+            "commits": commits,
             "userLevel": userLevel,
             "expEarned": expEarned
         }
         db.userLevels.insert_one(userPayload)
     else:
         numCommits += user["numCommits"]
+        user["commits"] += commits
         expEarned += user["expEarned"]
         userLevel = calcLevel(expEarned)
         db.userLevels.update_one({
@@ -85,6 +87,7 @@ async def push_event(event, gh, db, *args, **kwargs):
             "username": username
         }, {"$set": {
                 "numCommits": numCommits,
+                "commits": user["commits"],
                 "userLevel": userLevel,
                 "expEarned": expEarned
         }})
