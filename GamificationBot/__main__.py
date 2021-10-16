@@ -31,12 +31,21 @@ async def push_event(event, gh, db, *args, **kwargs):
     num_commits = len(event.data["commits"])
     # store the commit data into lists
     commits = []
+    # check whether commit is distinct
+    non_distinct_commit = 0
+
     for comm in event.data["commits"]:
         commits.append({
             "commit_id": comm["id"],
+            "distinct": comm["distinct"],
             "commit_time": comm["timestamp"]
         })
+        # keep count of number of commits that are not distinct
+        if not comm["distinct"]:
+            non_distinct_commit += 1
 
+    # remove non_distinct_commits from num_commits
+    num_commits = num_commits - non_distinct_commit
     # calculate experience earned
     exp_earned = 10 + (num_commits * 4)
 
@@ -103,6 +112,7 @@ async def issue_closed_event(event, gh, db, *args, **kwargs):
     user_id = event.data["sender"]["id"]
     event_type = "issue closed"
     issue_id = event.data["issue"]["id"]
+    issue_number = event.data["issue"]["number"]
     issue_url = event.data["issue"]["html_url"]
     issue_created_at = event.data["issue"]["created_at"]
     issue_closed_at = event.data["issue"]["closed_at"]
@@ -116,6 +126,7 @@ async def issue_closed_event(event, gh, db, *args, **kwargs):
         "repo_url": repo_url,
         "username": username,
         "user_id": user_id,
+        "issue_number": issue_number,
         "event_type": event_type,
         "issue_id": issue_id,
         "issue_url": issue_url,
