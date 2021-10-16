@@ -8,153 +8,151 @@ from datetime import datetime
 router = routing.Router()
 routes = web.RouteTableDef()
 
-def calcLevel(exp):
+def calc_level(exp):
     result = (exp / 5) - 1
     if result < 0:
         result = 0
     result = int(math.floor(1 + math.sqrt(result)))
     return result
-# end of calcLevel
+# end of calc_level
 
 @router.register("push")
 async def push_event(event, gh, db, *args, **kwargs):
     # data collection of push payload
-    repoOwner = event.data["repository"]["owner"]["login"]
-    repoFullName = event.data["repository"]["full_name"]
-    repoName = event.data["repository"]["name"]
-    repoID = event.data["repository"]["id"]
-    repoURL = event.data["repository"]["html_url"]
+    repo_owner = event.data["repository"]["owner"]["login"]
+    repo_full_name = event.data["repository"]["full_name"]
+    repo_name = event.data["repository"]["name"]
+    repo_id = event.data["repository"]["id"]
+    repo_url = event.data["repository"]["html_url"]
     username = event.data["sender"]["login"]
-    userID = event.data["sender"]["id"]
-    eventType = "push"
-    pushTime = datetime.now().isoformat()
-    numCommits = len(event.data["commits"])
+    user_id = event.data["sender"]["id"]
+    event_type = "push"
+    push_time = datetime.now().isoformat()
+    num_commits = len(event.data["commits"])
     # store the commit data into lists
     commits = []
     for comm in event.data["commits"]:
         commits.append({
-            "commitID": comm["id"],
-            "commitTime": comm["timestamp"]
+            "commit_id": comm["id"],
+            "commit_time": comm["timestamp"]
         })
 
     # calculate experience earned
-    expEarned = 10 + (numCommits * 4)
+    exp_earned = 10 + (num_commits * 4)
 
     # create the data collection payload
     payload = {
-        "repoOwner": repoOwner,
-        "repoFullName": repoFullName,
-        "repoName": repoName,
-        "repoID": repoID,
-        "repoURL": repoURL,
+        "repo_owner": repo_owner,
+        "repo_full_name": repo_full_name,
+        "repo_name": repo_name,
+        "repo_id": repo_id,
+        "repo_url": repo_url,
         "username": username,
-        "userID": userID,
-        "eventType": eventType,
-        "pushTime": pushTime,
-        "numCommits": numCommits,
+        "user_id": user_id,
+        "event_type": event_type,
+        "push_time": push_time,
+        "num_commits": num_commits,
         "commits": commits,
-        "expEarned": expEarned
+        "exp_earned": exp_earned
     }
     # insert payload into push collection
     db.push.insert_one(payload)
 
-    # find user in userLevels collection
-    user = db.userLevels.find_one({
-        "repoFullName": repoFullName,
+    # find user in user_levels collection
+    user = db.user_levels.find_one({
+        "repo_full_name": repo_full_name,
         "username": username
     })
 
     # insert or update user data
     if user == None:
-        userLevel = calcLevel(expEarned)
-        userPayload = {
-            "repoFullName": repoFullName,
+        user_level = calc_level(exp_earned)
+        user_payload = {
+            "repo_full_name": repo_full_name,
             "username": username,
-            "numCommits": numCommits,
-            "issuesClosed": 0,
+            "num_commits": num_commits,
+            "issues_closed": 0,
             "commits": commits,
-            "userLevel": userLevel,
-            "expEarned": expEarned
+            "user_level": user_level,
+            "exp_earned": exp_earned
         }
-        db.userLevels.insert_one(userPayload)
+        db.user_levels.insert_one(user_payload)
     else:
-        numCommits += user["numCommits"]
-        user["commits"] += commits
-        expEarned += user["expEarned"]
-        userLevel = calcLevel(expEarned)
-        db.userLevels.update_one({
-            "repoFullName": repoFullName,
+        num_commits += user["num_commits"]
+        exp_earned += user["exp_earned"]
+        user_level = calc_level(exp_earned)
+        db.user_levels.update_one({
+            "repo_full_name": repo_full_name,
             "username": username
         }, {"$set": {
-                "numCommits": numCommits,
-                "commits": user["commits"],
-                "userLevel": userLevel,
-                "expEarned": expEarned
+                "num_commits": num_commits,
+                "user_level": user_level,
+                "exp_earned": exp_earned
         }})
 # end of push_event
 
 @router.register("issues", action = "closed")
 async def issue_closed_event(event, gh, db, *args, **kwargs):
     # data collection of issues payload
-    repoOwner = event.data["repository"]["owner"]["login"]
-    repoFullName = event.data["repository"]["full_name"]
-    repoName = event.data["repository"]["name"]
-    repoID = event.data["repository"]["id"]
-    repoURL = event.data["repository"]["html_url"]
+    repo_owner = event.data["repository"]["owner"]["login"]
+    repo_full_name = event.data["repository"]["full_name"]
+    repo_name = event.data["repository"]["name"]
+    repo_id = event.data["repository"]["id"]
+    repo_url = event.data["repository"]["html_url"]
     username = event.data["sender"]["login"]
-    userID = event.data["sender"]["id"]
-    eventType = "issue closed"
-    issueID = event.data["issue"]["id"]
-    issueURL = event.data["issue"]["html_url"]
-    issueCreatedAt = event.data["issue"]["created_at"]
-    issueClosedAt = event.data["issue"]["closed_at"]
-    expEarned = 40
+    user_id = event.data["sender"]["id"]
+    event_type = "issue closed"
+    issue_id = event.data["issue"]["id"]
+    issue_url = event.data["issue"]["html_url"]
+    issue_created_at = event.data["issue"]["created_at"]
+    issue_closed_at = event.data["issue"]["closed_at"]
+    exp_earned = 40
 
     payload = {
-        "repoOwner": repoOwner,
-        "repoFullName": repoFullName,
-        "repoName": repoName,
-        "repoID": repoID,
-        "repoURL": repoURL,
+        "repo_owner": repo_owner,
+        "repo_full_name": repo_full_name,
+        "repo_name": repo_name,
+        "repo_id": repo_id,
+        "repo_url": repo_url,
         "username": username,
-        "userID": userID,
-        "eventType": eventType,
-        "issueID": issueID,
-        "issueURL": issueURL,
-        "issueCreatedAt": issueCreatedAt,
-        "issueClosedAt": issueClosedAt,
-        "expEarned": expEarned
+        "user_id": user_id,
+        "event_type": event_type,
+        "issue_id": issue_id,
+        "issue_url": issue_url,
+        "issue_created_at": issue_created_at,
+        "issue_closed_at": issue_closed_at,
+        "exp_earned": exp_earned
     }
-    # insert payload into issuesClosed collection
-    db.issuesClosed.insert_one(payload)
+    # insert payload into issues_closed collection
+    db.issues_closed.insert_one(payload)
 
-    user = db.userLevels.find_one({
-        "repoFullName": repoFullName,
+    user = db.user_levels.find_one({
+        "repo_full_name": repo_full_name,
         "username": username
     })
 
     if user == None:
-        userLevel = calcLevel(expEarned)
-        userPayload = {
-            "repoFullName": repoFullName,
+        user_level = calc_level(exp_earned)
+        user_payload = {
+            "repo_full_name": repo_full_name,
             "username": username,
-            "numCommits": 0,
-            "issuesClosed": 1,
-            "userLevel": userLevel,
-            "expEarned": expEarned
+            "num_commits": 0,
+            "issues_closed": 1,
+            "user_level": user_level,
+            "exp_earned": exp_earned
         }
-        db.userLevels.insert_one(userPayload)
+        db.user_levels.insert_one(user_payload)
     else:
-        issuesClosed = user["issuesClosed"] + 1
-        expEarned += user["expEarned"]
-        userLevel = calcLevel(expEarned)
-        db.userLevels.update_one({
-            "repoFullName": repoFullName,
+        issues_closed = user["issues_closed"] + 1
+        exp_earned += user["exp_earned"]
+        user_level = calc_level(exp_earned)
+        db.user_levels.update_one({
+            "repo_full_name": repo_full_name,
             "username": username
         }, {"$set": {
-                "issuesClosed": issuesClosed,
-                "userLevel": userLevel,
-                "expEarned": expEarned
+                "issues_closed": issues_closed,
+                "user_level": user_level,
+                "exp_earned": exp_earned
         }})
 # end if issue_closed_event
 
