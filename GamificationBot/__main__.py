@@ -104,6 +104,13 @@ async def push_event(event, gh, db, *args, **kwargs):
                 "user_level": user_level,
                 "exp_earned": exp_earned
         }})
+
+    compare_url = event.data["repository"]["compare_url"]
+    compare_url = compare_url[:-15]
+    basehead = event.data["compare"]
+    basehead = base[:-27]
+    compare_url += basehead
+    print(compare_url)
 # end of push_event
 
 @router.register("issues", action = "closed")
