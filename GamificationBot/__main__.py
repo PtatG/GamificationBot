@@ -75,10 +75,7 @@ async def push_event(event, gh, db, *args, **kwargs):
     db.push.insert_one(payload)
 
     # find user in user_levels collection
-    user = db.user_levels.find_one({
-        "repo_full_name": repo_full_name,
-        "username": username
-    })
+    user = db.user_levels.find_one({"repo_full_name": repo_full_name, "username": username})
 
     # insert or update user data
     if user == None:
