@@ -74,8 +74,15 @@ async def push_event(event, gh, db, *args, **kwargs):
                 num_changes += file_changes["changes"]
                 changes += file_changes["changes"]
 
+            commit_type = ""
+            if changes == 0:
+                commit_type = "pull request merged"
+            else:
+                commit_type = "normal commit"
+
             commits.append({
                 "id": comm["id"],
+                "commit_type": commit_type,
                 "changes": changes,
                 "timestamp": comm["timestamp"]
             })
@@ -137,9 +144,6 @@ async def push_event(event, gh, db, *args, **kwargs):
                 "user_level": user_level,
                 "exp_earned": exp_earned
         }})
-
-    print(event.data)
-
 # end of push_event
 
 @router.register("issues", action = "closed")
