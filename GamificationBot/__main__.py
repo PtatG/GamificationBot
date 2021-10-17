@@ -38,11 +38,27 @@ async def push_event(event, gh, db, *args, **kwargs):
     num_commits = len(event.data["commits"])
     # store the commit data into lists
     commits = []
-    # check whether commit is distinct
+    # number of non-distinct commits
     non_distinct_commit = 0
+    # number of changes made within each commit
+    num_changes = 0
 
     for comm in event.data["commits"]:
         if comm["distinct"]:
+            # prepare url for github api request
+            compare_url = comm["repository"]["compare_url"]
+            compare_url = compare_url[:-15]
+            base = comm["before"]
+            base = base[:12]
+            head = comm["after"]
+            head = head[:12]
+            compare_url += base + "..." + head
+            # use getitem to get compare payload
+            compare_payload = await gh.getitem(compare_url)
+            # loop through files and get number of changes
+            for file_changes in compare_payload["files"]:
+                num_changes += file_changes["changes"]
+
             commits.append({
                 "id": comm["id"],
                 "timestamp": comm["timestamp"]
@@ -54,7 +70,8 @@ async def push_event(event, gh, db, *args, **kwargs):
     # remove non_distinct_commits from num_commits
     num_commits = num_commits - non_distinct_commit
     # calculate experience earned
-    exp_earned = 10 + (num_commits * 4)
+    # each push is worth 5 points, each commit is worth 2 points, and each change is worth 1 point
+    exp_earned = 5 + (num_commits * 2) + num_changes
 
     # create the data collection payload
     payload = {
@@ -104,16 +121,6 @@ async def push_event(event, gh, db, *args, **kwargs):
                 "user_level": user_level,
                 "exp_earned": exp_earned
         }})
-
-    compare_url = event.data["repository"]["compare_url"]
-    compare_url = compare_url[:-15]
-    base = event.data["before"]
-    base = base[:12]
-    head = event.data["after"]
-    head = head[:12]
-    compare_url += base + "..." + head
-    compare_payload = await gh.getitem(compare_url)
-    print(compare_payload)
 # end of push_event
 
 @router.register("issues", action = "closed")
