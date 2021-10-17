@@ -137,6 +137,9 @@ async def push_event(event, gh, db, *args, **kwargs):
                 "user_level": user_level,
                 "exp_earned": exp_earned
         }})
+
+    print(event.data)
+
 # end of push_event
 
 @router.register("issues", action = "closed")
