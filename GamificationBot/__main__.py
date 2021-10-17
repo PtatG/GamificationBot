@@ -81,7 +81,6 @@ async def push_event(event, gh, db, *args, **kwargs):
             "username": username,
             "num_commits": num_commits,
             "issues_closed": 0,
-            "commits": commits,
             "user_level": user_level,
             "exp_earned": exp_earned
         }
