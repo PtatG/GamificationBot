@@ -58,10 +58,11 @@ async def push_event(event, gh, db, *args, **kwargs):
             # loop through files and get number of changes
             for file_changes in compare_payload["files"]:
                 num_changes += file_changes["changes"]
+                changes += file_changes["changes"]
 
             commits.append({
                 "id": comm["id"],
-                "changes": num_changes,
+                "changes": changes,
                 "timestamp": comm["timestamp"]
             })
         # keep count of number of commits that are not distinct
