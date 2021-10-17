@@ -112,7 +112,7 @@ async def push_event(event, gh, db, *args, **kwargs):
     head = event.data["after"]
     head = head[:12]
     compare_url += base + "..." + head
-    print(compare_url)
+    print(getitem(compare_url))
 # end of push_event
 
 @router.register("issues", action = "closed")
