@@ -45,8 +45,8 @@ async def push_event(event, gh, db, *args, **kwargs):
     num_changes = 0
 
     for comm in event.data["commits"]:
+        changes = 0
         if comm["distinct"]:
-            changes = 0
             # prepare url for github api request
             compare_url = event.data["repository"]["compare_url"]
             compare_url = compare_url[:-15]
