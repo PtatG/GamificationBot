@@ -46,11 +46,11 @@ async def push_event(event, gh, db, *args, **kwargs):
     for comm in event.data["commits"]:
         if comm["distinct"]:
             # prepare url for github api request
-            compare_url = comm["repository"]["compare_url"]
+            compare_url = event.data["repository"]["compare_url"]
             compare_url = compare_url[:-15]
-            base = comm["before"]
+            base = event.data["before"]
             base = base[:12]
-            head = comm["after"]
+            head = comm["id"]
             head = head[:12]
             compare_url += base + "..." + head
             # use getitem to get compare payload
