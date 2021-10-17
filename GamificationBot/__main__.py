@@ -61,6 +61,7 @@ async def push_event(event, gh, db, *args, **kwargs):
 
             commits.append({
                 "id": comm["id"],
+                "changes": num_changes,
                 "timestamp": comm["timestamp"]
             })
         # keep count of number of commits that are not distinct
