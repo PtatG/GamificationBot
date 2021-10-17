@@ -48,20 +48,24 @@ async def push_event(event, gh, db, *args, **kwargs):
     temp = ""
 
     for comm in event.data["commits"]:
+        # base, head, and temp must be outside the if statement for distinct
+        # because we need to pass the ids even when not distinct
+        # otherwise, we will get the wrong number of changes
+        if flag:
+            base = event.data["before"]
+            flag = False
+        else:
+            base = temp
+        base = base[:12]
+        head = comm["id"]
+        head = head[:12]
+        temp = head
+
         if comm["distinct"]:
             changes = 0
             # prepare url for github api request
             compare_url = event.data["repository"]["compare_url"]
             compare_url = compare_url[:-15]
-            if flag:
-                base = event.data["before"]
-                flag = False
-            else:
-                base = temp
-            base = base[:12]
-            head = comm["id"]
-            head = head[:12]
-            temp = head
             compare_url += base + "..." + head
             # use getitem to get compare payload
             compare_payload = await gh.getitem(compare_url)
