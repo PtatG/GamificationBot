@@ -43,17 +43,25 @@ async def push_event(event, gh, db, *args, **kwargs):
     non_distinct_commit = 0
     # number of changes made within each commit
     num_changes = 0
-    changes = 0
+    # flag required for base and temp required to hold previous head
+    flag = True
+    temp = ""
 
     for comm in event.data["commits"]:
         if comm["distinct"]:
+            changes = 0
             # prepare url for github api request
             compare_url = event.data["repository"]["compare_url"]
             compare_url = compare_url[:-15]
-            base = event.data["before"]
+            if flag:
+                base = event.data["before"]
+                flag = False
+            else:
+                base = temp
             base = base[:12]
             head = comm["id"]
             head = head[:12]
+            temp = head
             compare_url += base + "..." + head
             # use getitem to get compare payload
             compare_payload = await gh.getitem(compare_url)
@@ -67,7 +75,6 @@ async def push_event(event, gh, db, *args, **kwargs):
                 "changes": changes,
                 "timestamp": comm["timestamp"]
             })
-            changes = 0
         # keep count of number of commits that are not distinct
         else:
             non_distinct_commit += 1
