@@ -43,9 +43,9 @@ async def push_event(event, gh, db, *args, **kwargs):
     non_distinct_commit = 0
     # number of changes made within each commit
     num_changes = 0
+    changes = 0
 
     for comm in event.data["commits"]:
-        changes = 0
         if comm["distinct"]:
             # prepare url for github api request
             compare_url = event.data["repository"]["compare_url"]
@@ -67,6 +67,7 @@ async def push_event(event, gh, db, *args, **kwargs):
                 "changes": changes,
                 "timestamp": comm["timestamp"]
             })
+            changes = 0
         # keep count of number of commits that are not distinct
         else:
             non_distinct_commit += 1
