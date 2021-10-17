@@ -71,11 +71,11 @@ async def push_event(event, gh, db, *args, **kwargs):
         "commits": commits,
         "exp_earned": exp_earned
     }
-    # insert payload into push collection
-    db.push.insert_one(payload)
+    # insert payload into gamBotPushes collection
+    db.gamBotPushes.insert_one(payload)
 
-    # find user in user_levels collection
-    user = db.user_levels.find_one({"repo_full_name": repo_full_name, "username": username})
+    # find user in gamBotLevels collection
+    user = db.gamBotLevels.find_one({"repo_full_name": repo_full_name, "username": username})
 
     # insert or update user data
     if user == None:
@@ -88,12 +88,12 @@ async def push_event(event, gh, db, *args, **kwargs):
             "user_level": user_level,
             "exp_earned": exp_earned
         }
-        db.user_levels.insert_one(user_payload)
+        db.gamBotLevels.insert_one(user_payload)
     else:
         num_commits += user["num_commits"]
         exp_earned += user["exp_earned"]
         user_level = calc_level(exp_earned)
-        db.user_levels.update_one({
+        db.gamBotLevels.update_one({
             "repo_full_name": repo_full_name,
             "username": username
         }, {"$set": {
@@ -137,10 +137,10 @@ async def issue_closed_event(event, gh, db, *args, **kwargs):
         "issue_closed_at": issue_closed_at,
         "exp_earned": exp_earned
     }
-    # insert payload into issues_closed collection
-    db.issues_closed.insert_one(payload)
+    # insert payload into gamBotIssues collection
+    db.gamBotIssues.insert_one(payload)
 
-    user = db.user_levels.find_one({
+    user = db.gamBotLevels.find_one({
         "repo_full_name": repo_full_name,
         "username": username
     })
@@ -155,12 +155,12 @@ async def issue_closed_event(event, gh, db, *args, **kwargs):
             "user_level": user_level,
             "exp_earned": exp_earned
         }
-        db.user_levels.insert_one(user_payload)
+        db.gamBotLevels.insert_one(user_payload)
     else:
         issues_closed = user["issues_closed"] + 1
         exp_earned += user["exp_earned"]
         user_level = calc_level(exp_earned)
-        db.user_levels.update_one({
+        db.gamBotLevels.update_one({
             "repo_full_name": repo_full_name,
             "username": username
         }, {"$set": {
