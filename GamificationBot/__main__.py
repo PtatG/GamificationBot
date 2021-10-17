@@ -107,9 +107,11 @@ async def push_event(event, gh, db, *args, **kwargs):
 
     compare_url = event.data["repository"]["compare_url"]
     compare_url = compare_url[:-15]
-    basehead = event.data["compare"]
-    basehead = basehead[:-27]
-    compare_url += basehead
+    base = event.data["before"]
+    base = base[:12]
+    head = event.data["after"]
+    head = head[:12]
+    compare_url += base + "..." + head
     print(compare_url)
 # end of push_event
 
