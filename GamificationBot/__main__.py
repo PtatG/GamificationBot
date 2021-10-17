@@ -3,7 +3,8 @@ Project name: Gamification Bot
 Written by: Phillip Tat
 Date written: 8/23/21
 For: UCF Senior Design Project
-Purpose: Count pushes, commits, issues opened, and issues closed. Calculate experience earned and calculate level. Store data in our database.
+Purpose: Count pushes, commits, commit changes, issues opened, and issues closed.
+Calculate experience earned and calculate level. Store data in our database.
 """
 import os, aiohttp, base64, math
 from aiohttp import web
