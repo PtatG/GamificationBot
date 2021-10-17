@@ -184,8 +184,8 @@ async def main(request):
     # our mongodb uri with username and password
     uri = os.environ.get("MONGODB_URI")
     client = MongoClient(uri)
-    # connect to test db
-    db = client.test
+    # connect to githubDB
+    db = client.githubDB
 
     # a representation of github webhook event
     event = sansio.Event.from_http(request.headers, body, secret = secret)
