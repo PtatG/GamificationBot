@@ -44,8 +44,8 @@ async def push_event(event, gh, db, *args, **kwargs):
     for comm in event.data["commits"]:
         if comm["distinct"]:
             commits.append({
-                "commit_id": comm["id"],
-                "commit_time": comm["timestamp"]
+                "id": comm["id"],
+                "timestamp": comm["timestamp"]
             })
         # keep count of number of commits that are not distinct
         else:
