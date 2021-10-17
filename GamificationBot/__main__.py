@@ -75,7 +75,10 @@ async def push_event(event, gh, db, *args, **kwargs):
     db.gamBotPushes.insert_one(payload)
 
     # find user in gamBotLevels collection
-    user = db.gamBotLevels.find_one({"repo_full_name": repo_full_name, "username": username})
+    user = db.gamBotLevels.find_one({
+        "repo_full_name": repo_full_name,
+        "username": username
+    })
 
     # insert or update user data
     if user == None:
