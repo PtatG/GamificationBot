@@ -1,2 +1,2 @@
 # GamificationBot
-repo for gamification bot code and demo
+Github bot for calculating user levels and experience earned
