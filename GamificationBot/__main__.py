@@ -88,8 +88,6 @@ async def push_event(event, gh, db, *args, **kwargs):
                 "changes": changes,
                 "timestamp": comm["timestamp"]
             })
-
-            print(compare_payload)
         # keep count of number of commits that are not distinct
         else:
             non_distinct_commit += 1
@@ -148,8 +146,6 @@ async def push_event(event, gh, db, *args, **kwargs):
                 "user_level": user_level,
                 "exp_earned": exp_earned
         }})
-
-    print(event.data)
 # end of push_event
 
 @router.register("issues", action = "closed")
